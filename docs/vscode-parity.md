@@ -7,18 +7,6 @@ extension to Neovim, where it diverges, and why.
 Reference: codetime-vscode v0.14.0 (commit `d1fbb503`). Line numbers refer
 to `src/codetime.ts` unless another file is named.
 
-## Not yet implemented
-
-This document describes the target behavior. Still missing:
-
-- `fileAddedLine`, `changeEditorSelection`, `changeEditorVisibleRanges`
-  and the `cursor_throttle` option;
-- `editorChanged` on `FocusLost`;
-- `fileCreated` on first write (currently sent on `BufNewFile`);
-- `gitOrigin` / `gitBranch` as `""` when missing (currently omitted) and
-  `"HEAD"` when detached;
-- checking the throttle before project/git lookup.
-
 ## Neovim concepts for VS Code users
 
 - **Buffer**: a file loaded in memory, roughly a VS Code *document*.
@@ -78,7 +66,8 @@ Exactly these 12 fields; the token is not in the body.
 Git info: VS Code runs git in the first workspace folder and returns `""`
 on any failure (`src/utils.ts` L34-86). The plugin runs it in the file's
 project root and caches it per root, refreshing on `FocusGained` (the
-branch may change outside the editor).
+branch may change outside the editor). In a repo with no commits yet,
+`rev-parse` fails, so `gitBranch` is `""` in both clients.
 
 Headers (`apiRequest`, L69-267): `Authorization: Bearer <token>`,
 `User-Agent: CodeTime Client`, `Content-Type: application/json`. Timeout

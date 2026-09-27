@@ -47,6 +47,7 @@ opts = {
   token = nil,
   read_throttle = 120000, -- ms between read events for the same file
   write_throttle = 10000, -- ms between edit events for the same file
+  cursor_throttle = 30000, -- ms between cursor/scroll events for the same file
   status_interval = 60000, -- ms between dashboard refreshes / retries
   queue_limit = 500, -- failed events kept for retry
 }
@@ -83,12 +84,17 @@ lualine_x = {
 | Neovim event | codetime event | Type | Throttle |
 |---|---|---|---|
 | `BufEnter` | `activateFileChanged` | read | `read_throttle` per file |
-| `FocusGained` | `editorChanged` | read | `read_throttle` per file |
+| `FocusGained`, `FocusLost` | `editorChanged` | read | `read_throttle` per file |
+| `CursorMoved` | `changeEditorSelection` | read | `cursor_throttle` per file |
+| `WinScrolled` | `changeEditorVisibleRanges` | read | `cursor_throttle` per file |
 | `TextChanged`, `TextChangedI` | `fileEdited` | write | `write_throttle` per file |
+| same, when lines were added | `fileAddedLine` | write | `write_throttle` per file |
 | `BufWritePost` | `fileSaved` | write | none |
-| `BufNewFile` | `fileCreated` | write | none |
+| first `BufWritePost` after `BufNewFile` | `fileCreated` | write | none |
 
 Only real file buffers are tracked (named, `buftype` empty).
+`FocusGained` / `FocusLost` need a terminal that reports focus changes
+(in tmux: `set -g focus-events on`).
 
 ## Compatibility with VS Code
 
@@ -110,7 +116,8 @@ make format                                # stylua lua/ tests/
 Each event sends the same fields as the VS Code extension:
 project (git root or cwd folder name), language (filetype), relative
 and **absolute** file path, editor, OS name/release, architecture,
-event time/type, read/write, git `origin` URL and current branch. No
+event time/type, read/write, git `origin` URL and current branch
+(`""` outside a repo or without a remote, `"HEAD"` when detached). No
 file contents are sent.
 
 ## Delivery

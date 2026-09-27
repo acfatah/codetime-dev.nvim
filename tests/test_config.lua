@@ -11,6 +11,7 @@ T["defaults"] = function()
     editor = "Neovim",
     read_throttle = 120000,
     write_throttle = 10000,
+    cursor_throttle = 30000,
     status_interval = 60000,
     queue_limit = 500,
   })

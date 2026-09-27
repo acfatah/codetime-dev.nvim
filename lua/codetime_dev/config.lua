@@ -6,6 +6,7 @@ M.defaults = {
   token = nil, -- falls back to $CODETIME_TOKEN, then ~/.codetime/config.json
   read_throttle = 120000, -- ms between read events for the same file
   write_throttle = 10000, -- ms between edit events for the same file
+  cursor_throttle = 30000, -- ms between cursor/scroll events for the same file
   status_interval = 60000, -- ms between dashboard minute refreshes / queue retries
   queue_limit = 500, -- failed events kept for retry, oldest dropped first
 }

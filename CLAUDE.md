@@ -52,13 +52,18 @@ detached }` / `child.tmpdir()` create temp dirs and `cd` into them.
   clears the 401 pause, and ticks immediately.
 - `events.lua` — autocmds → `track(buf, event_type)`. Builds the payload
   (field names/event names mirror codetime-vscode's `src/events.ts`; arch
-  mapped to Node `os.arch()` names). Per-`event\0file` throttle:
-  `fileEdited` uses `write_throttle`, other write events none, read events
-  `read_throttle`.
+  mapped to Node `os.arch()` names). Per-`event\0file` throttle, checked
+  **before** `project.info()` because CursorMoved/TextChangedI fire
+  constantly: `fileEdited`/`fileAddedLine` → `write_throttle`, cursor and
+  scroll events → `cursor_throttle`, other writes none, other reads
+  `read_throttle`. Per-buffer state: line counts (`fileAddedLine` = line
+  count grew) and new-file marks (`fileCreated` on first write after
+  `BufNewFile`), cleared on `BufWipeout`.
 - `project.lua` — project = basename of `vim.fs.root(buf, ".git")` or cwd.
-  Git origin/branch cached per root; fetched **synchronously** (2s cap) the
-  first time a root is seen so the first event has git info, async on
-  `FocusGained` refresh.
+  Git origin/branch cached per root, always strings (`""` on failure,
+  branch via `rev-parse --abbrev-ref HEAD`, like VS Code); fetched
+  **synchronously** (2s cap) the first time a root is seen so the first
+  event has git info, async on `FocusGained` refresh.
 - `client.lua` — POST `/v3/users/event-log`. 2xx → `sent++`; 401 →
   `on_unauthorized()` pauses all sending (one warning) until
   `:CodeTimeDevReload`; status 0 or 5xx → in-memory queue (capped at
