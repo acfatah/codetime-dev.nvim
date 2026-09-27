@@ -23,7 +23,9 @@ function M.load(opts_token)
     M.value, M.source = vim.env.CODETIME_TOKEN, "$CODETIME_TOKEN"
   else
     local token = from_config_file()
-    if token then M.value, M.source = token, M.config_path end
+    if token then
+      M.value, M.source = token, M.config_path
+    end
   end
   return M.value
 end

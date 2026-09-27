@@ -21,7 +21,11 @@ function M.on_unauthorized()
   M.paused = true
   M.last_error = "401 Unauthorized"
   vim.notify(
-    "codetime.dev: token rejected (" .. token.masked() .. " from " .. tostring(token.source) .. "). "
+    "codetime.dev: token rejected ("
+      .. token.masked()
+      .. " from "
+      .. tostring(token.source)
+      .. "). "
       .. "Fix it, then :CodeTimeDevReload",
     vim.log.levels.WARN
   )
