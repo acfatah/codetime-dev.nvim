@@ -8,24 +8,39 @@ code in this repository.
 Unofficial Neovim client for codetime.dev (Neovim 0.10+, `curl` on `PATH`).
 Pure Lua, no dependencies, no build step. README.md is the user-facing spec
 (options, commands, event table, privacy, delivery) — keep it in sync with
-behavior changes.
+behavior changes. `docs/vscode-parity.md` maps every event and payload field
+to the official VS Code extension and lists deliberate divergences; the
+plugin must keep sending the same event types and payload shape as VS Code.
 
 ## Commands
 
-No test suite, linter config, or CI in the repo.
-
-- Format: `stylua lua/` (check only: `stylua --check lua/`), using the
+- Tests (mini.test, cloned into git-ignored `deps/` by `make deps`):
+  `make test`; one file: `make test-file FILE=tests/test_events.lua`.
+  Another Neovim: `make test NVIM_BIN=/path/to/nvim` (the variable is not
+  `NVIM`: Neovim's terminal sets `$NVIM` to its socket). CI
+  (`.github/workflows/test.yml`) runs Neovim 0.10.4 + stable and
+  `stylua --check lua/ tests/`.
+- Format: `make format` / `make format-check` (`stylua lua/ tests/`), using the
   repo's `.stylua.toml`: 2 spaces, width 120, double quotes,
   `call_parentheses = "None"` (`require "x"`), collapsed one-line functions.
-  If `stylua` isn't on `PATH`, `npx -y @johnnymorganz/stylua-bin lua/`
+  If `stylua` isn't on `PATH`, `npx -y @johnnymorganz/stylua-bin lua/ tests/`
   works without installing (or `:MasonInstall stylua`).
-- Headless smoke load:
-  `nvim --headless -u NONE --cmd "set rtp+=." -c "lua require('codetime_dev').setup({ api_url = 'http://127.0.0.1:8000' })" -c "qa"`
-- Behavior verification (how the plugin was originally validated): run a
-  Python `http.server` mock in the scratchpad that records requests, point
-  `api_url` at it with `CODETIME_TOKEN=test`, then check payloads,
-  throttling, 401 pause, and queue flush after mock downtime. Avoid hitting
-  the real API unless asked — it writes to the user's codetime account.
+- Manual check: `python3 tests/mock_server.py /tmp/log.jsonl` prints a port;
+  point `api_url` at `http://127.0.0.1:<port>` (prefix `/s/<code>` to force
+  a status). Avoid hitting the real API unless asked — it writes to the
+  user's codetime account.
+
+## Tests
+
+`tests/helpers.lua` gives each case a fresh child Neovim (`child.setup()`),
+so module singletons never leak between cases. By default it stubs
+`codetime_dev.http` with a recorder (`child.events()`, `child.requests()`,
+`child.respond({ status, body })` queues responses), isolates `$HOME`,
+captures `vim.notify` in `_G.notes`, and fakes the clock: cross a throttle
+with `child.advance(ms)` instead of sleeping. `child.git_repo{ origin,
+detached }` / `child.tmpdir()` create temp dirs and `cd` into them.
+`test_http.lua` is the only file using real curl, against
+`tests/mock_server.py`.
 
 ## Architecture
 

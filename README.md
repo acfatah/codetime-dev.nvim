@@ -90,6 +90,21 @@ lualine_x = {
 
 Only real file buffers are tracked (named, `buftype` empty).
 
+## Compatibility with VS Code
+
+Events and payload fields follow the official VS Code extension. See
+[docs/vscode-parity.md](docs/vscode-parity.md) for the mapping and the
+deliberate differences (throttling instead of random sampling, retry
+queue, 401 pause).
+
+## Development
+
+```sh
+make test                                  # mini.test, cloned into deps/
+make test-file FILE=tests/test_events.lua  # one file
+make format                                # stylua lua/ tests/
+```
+
 ## Privacy
 
 Each event sends the same fields as the VS Code extension:
